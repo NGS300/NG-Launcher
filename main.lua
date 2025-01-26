@@ -1,6 +1,11 @@
 loveframes = require 'libraries.loveframes'
 lovedownloader = require 'libraries.lovedownloader'
 nativefs = require 'libraries.nativefs'
+resolution = require 'libraries.resolution'
+neuron = require 'libraries.neuron'
+
+viewmanager = require 'src.Components.ViewManager'
+
 require("src.Components.AddonLoad")()
 
 local function loadView(path)
@@ -10,6 +15,26 @@ local function loadView(path)
 end
 
 function love.load()
+    winconfig = {
+        width = 1024,
+        height = 512,
+        aspectRatio = true,
+        centered = true,
+        clampMouse = true,
+        clip = true,
+    }
+
+    launcherSettings = neuron.new()
+    launcherSettings.save.config = {
+        user = {
+            theme = "Dark red",
+        }
+    }
+
+    launcherSettings:initialize()
+
+    resolution.init(winconfig)
+
     -- create folders --
     love.filesystem.createDirectory("instances")
     love.filesystem.createDirectory("instances/viewer")
@@ -18,7 +43,9 @@ function love.load()
 
     loveframes.SetActiveSkin("Dark red")
 
-    loadView("src/Views/MainView.lua")
+    --loadView("src/Views/MainView.lua")
+
+    viewmanager.load("assets/data/views/MainView.lua")
 end
 
 function love.draw()
@@ -27,6 +54,7 @@ end
 
 function love.update(elapsed)
     loveframes.update(elapsed)
+    viewmanager.reloadViews()
 end
 
 function love.mousepressed(x, y, button)
@@ -47,8 +75,6 @@ function love.keypressed(key, isrepeat)
     if key == "f1" then
         local debug = loveframes.config["DEBUG"]
         loveframes.config["DEBUG"] = not debug
-    elseif key == "f5" then
-        loadView("src/Views/MainView.lua")
     end
 end
 
