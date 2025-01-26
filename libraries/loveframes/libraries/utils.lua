@@ -5,9 +5,10 @@
 
 return function(loveframes)
 ---------- module start ----------
-
 -- util library
 --local util = {}
+
+local statecallbacks = {};
 
 --[[---------------------------------------------------------
 	- func: SetState(name)
@@ -15,9 +16,64 @@ return function(loveframes)
 --]]---------------------------------------------------------
 function loveframes.SetState(name)
 
-	loveframes.state = name
-	loveframes.base.state = name
-	
+	if (loveframes.state ~= name) then
+
+		--fire the closing function of the soon-to-be-closed state
+		if (type(statecallbacks[loveframes.state]) == "table" and
+			type(statecallbacks[loveframes.state].onclose) == "function") then
+			--callback must accept the name of the current state and soon-to-be-opened state as args
+			statecallbacks[loveframes.state].onclose(loveframes.state, name);
+		end
+
+		local oldstate = loveframes.state;
+		loveframes.state = name
+		loveframes.base.state = name
+
+		--fire the opening function of the newly-opened state
+		if (type(statecallbacks[loveframes.state]) == "table" and
+			type(statecallbacks[loveframes.state].onopen) == "function") then
+			--callback must accept the name of the current state and previous state as args
+			statecallbacks[loveframes.state].onopen(name, oldstate);
+		end
+
+	end
+
+end
+
+--[[---------------------------------------------------------
+	- func: SetStateOnOpenCallback(name, func)
+	- desc: sets a state's opening callback function
+--]]---------------------------------------------------------
+function loveframes.SetStateOnOpenCallback(name, func)
+
+	if (type(name) == "string" and name:gsub("%s", '') ~= '' and
+		type(func) == "function") then
+
+		if (not (statecallbacks[name])) then
+			statecallbacks[name] = {};
+		end
+
+		statecallbacks[name].onopen = func;
+	end
+
+end
+
+--[[---------------------------------------------------------
+	- func: SetStateOnOpenCallback(name, func)
+	- desc: sets a state's closing callback function
+--]]---------------------------------------------------------
+function loveframes.SetStateOnCloseCallback(name, func)
+
+	if (type(name) == "string" and name:gsub("%s", '') ~= '' and
+		type(func) == "function") then
+
+		if (not (statecallbacks[name])) then
+			statecallbacks[name] = {};
+		end
+
+		statecallbacks[name].onclose = func;
+	end
+
 end
 
 --[[---------------------------------------------------------
@@ -27,7 +83,7 @@ end
 function loveframes.GetState()
 
 	return loveframes.state
-	
+
 end
 
 --[[---------------------------------------------------------
@@ -37,7 +93,7 @@ end
 function loveframes.SetActiveSkin(name)
 	local skin = name and loveframes.skins[name]
 	if not skin then print("SetActiveSkin: no such skin") return end
-	
+
 	loveframes.config["ACTIVESKIN"] = name
 	local object = loveframes.base
 	object:SetSkin(name)
@@ -78,7 +134,7 @@ function loveframes.GetCollisions(object, t)
 	local internals = object.internals
 	local objectstate = object.state
 	local t = t or {}
-	
+
 	if objectstate == curstate and visible then
 		local objectx = object.x
 		local objecty = object.y
@@ -115,7 +171,7 @@ function loveframes.GetCollisions(object, t)
 			end
 		end
 	end
-	
+
 	return t
 end
 
@@ -128,21 +184,21 @@ function loveframes.GetAllObjects(object, t)
 	local internals = object.internals
 	local children = object.children
 	local t = t or {}
-	
+
 	table.insert(t, object)
-	
+
 	if internals then
 		for k, v in ipairs(internals) do
 			loveframes.GetAllObjects(v, t)
 		end
 	end
-	
+
 	if children then
 		for k, v in ipairs(children) do
 			loveframes.GetAllObjects(v, t)
 		end
 	end
-	
+
 	return t
 
 end
@@ -157,7 +213,7 @@ function loveframes.GetDirectoryContents(dir, t)
 	local t = t or {}
 	local dirs = {}
 	local files = love.filesystem.getDirectoryItems(dir)
-	
+
 	for k, v in ipairs(files) do
 		local isdir = love.filesystem.getInfo(dir.. "/" ..v) ~= nil and love.filesystem.getInfo(dir.. "/" ..v)["type"] == "directory" --love.filesystem.isDirectory(dir.. "/" ..v)
 		if isdir == true then
@@ -170,19 +226,19 @@ function loveframes.GetDirectoryContents(dir, t)
 			end
 			local name = table.concat(parts, ".")
 			table.insert(t, {
-				path = dir, 
-				fullpath = dir.. "/" ..v, 
-				requirepath = loveframes.utf8.gsub(dir, "/", ".") .. "." ..name, 
-				name = name, 
+				path = dir,
+				fullpath = dir.. "/" ..v,
+				requirepath = loveframes.utf8.gsub(dir, "/", ".") .. "." ..name,
+				name = name,
 				extension = extension
 			})
 		end
 	end
-	
+
 	for k, v in ipairs(dirs) do
 		t = loveframes.GetDirectoryContents(v, t)
 	end
-	
+
 	return t
 end
 
@@ -194,11 +250,11 @@ end
 --]]---------------------------------------------------------
 function loveframes.Round(num, idp)
 	local mult = 10^(idp or 0)
-	
-    if num >= 0 then 
+
+    	if num >= 0 then
 		return math.floor(num * mult + 0.5) / mult
-    else 
-		return math.ceil(num * mult - 0.5) / mult 
+    	else
+		return math.ceil(num * mult - 0.5) / mult
 	end
 end
 
@@ -209,7 +265,7 @@ end
 --]]---------------------------------------------------------
 function loveframes.SplitString(str, pat)
 	local t = {}  -- NOTE: use {n = 0} in Lua-5.0
-	
+
 	if pat == " " then
 		local fpat = "(.-)" .. pat
 		local last_end = 1
@@ -244,7 +300,7 @@ function loveframes.SplitString(str, pat)
 			table.insert(t, cap)
 		end
 	end
-	
+
 	return t
 end
 
@@ -255,7 +311,7 @@ end
 function loveframes.RemoveAll()
 	loveframes.base.children = {}
 	loveframes.base.internals = {}
-	
+
 	loveframes.hoverobject = false
 	loveframes.downobject = false
 	loveframes.modalobject = false
@@ -273,7 +329,7 @@ function loveframes.TableHasValue(table, value)
 			return true
 		end
 	end
-	
+
 	return false
 end
 
@@ -283,7 +339,7 @@ end
 --]]---------------------------------------------------------
 function loveframes.TableHasKey(table, key)
 	return table[key] ~= nil
-	
+
 end
 
 --[[---------------------------------------------------------
@@ -348,9 +404,9 @@ end
 	- desc: returns loveframes.hoverobject
 --]]---------------------------------------------------------
 function loveframes.GetHoverObject()
-	
+
 	return loveframes.hoverobject
-	
+
 end
 
 --[[---------------------------------------------------------
@@ -388,11 +444,11 @@ function loveframes.DebugDraw()
 	local fps = love.timer.getFPS()
 	local deltatime = love.timer.getDelta()
 	local font = loveframes.basicfontsmall
-	
+
 	if hoverobject then
 		topcol = hoverobject
 	end
-	
+
 	-- show frame docking zones
 	if topcol.type == "frame" then
 		for k, v in pairs(topcol.dockzones) do
@@ -403,12 +459,12 @@ function loveframes.DebugDraw()
 			love.graphics.rectangle("line", v.x, v.y, v.width, v.height)
 		end
 	end
-	
+
 	-- outline the object that the mouse is hovering over
 	love.graphics.setColor(255/255, 204/255, 51/255, 255/255)
 	love.graphics.setLineWidth(2)
 	love.graphics.rectangle("line", topcol.x - 1, topcol.y - 1, topcol.width + 2, topcol.height + 2)
-	
+
 	-- draw main debug box
 	love.graphics.setFont(font)
 	love.graphics.setColor(0, 0, 0, 200/255)
@@ -420,7 +476,7 @@ function loveframes.DebugDraw()
 	love.graphics.print("FPS: " ..fps, infox + 10, infoy + 30)
 	love.graphics.print("Delta Time: " ..deltatime, infox + 10, infoy + 40)
 	love.graphics.print("Total Objects: " ..loveframes.objectcount, infox + 10, infoy + 50)
-	
+
 	-- draw object information if needed
 	if topcol.type ~= "base" then
 		love.graphics.setColor(0, 0, 0, 200/255)

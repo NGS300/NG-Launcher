@@ -65,8 +65,8 @@ function newobject:update(dt)
 	
 	-- move to parent if there is a parent
 	if parent ~= base then
-		self.x = self.parent.x + self.staticx
-		self.y = self.parent.y + self.staticy
+		self.x = self.parent.x + self.staticx - (parent.offsetx or 0)
+		self.y = self.parent.y + self.staticy - (parent.offsety or 0)
 	end
 	
 	if update then
@@ -252,6 +252,21 @@ function newobject:GetChoice()
 end
 
 --[[---------------------------------------------------------
+	- func: GetChoiceIndex()
+	- desc: gets the current choice index
+--]]---------------------------------------------------------
+function newobject:GetChoiceIndex()
+
+	local choices = self.choices
+	for i, v in ipairs(choices) do
+		if self.choice == v then
+			return i
+		end
+	end
+
+end
+
+--[[---------------------------------------------------------
 	- func: SetText(text)
 	- desc: sets the object's text
 --]]---------------------------------------------------------
@@ -310,7 +325,7 @@ end
 	- func: GetMouseWheelScrollAmount()
 	- desc: gets the scroll amount of the mouse wheel
 --]]---------------------------------------------------------
-function newobject:GetButtonScrollAmount()
+function newobject:GetMouseWheelScrollAmount()
 
 	return self.mousewheelscrollamount
 	

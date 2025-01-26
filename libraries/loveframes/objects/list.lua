@@ -38,7 +38,10 @@ function newobject:initialize()
 	self.internals = {}
 	self.children = {}
 	self.OnScroll = nil
-	
+
+	self.scrollx = loveframes.objects["scrollbody"]:new(self, "horizontal")
+	self.scrolly = loveframes.objects["scrollbody"]:new(self, "vertical")
+
 	self:SetDrawFunc()
 end
 
@@ -56,7 +59,7 @@ function newobject:update(dt)
 	end
 	
 	local visible = self.visible
-	local alwaysupdate 	= self.alwaysupdate
+	local alwaysupdate = self.alwaysupdate
 	
 	if not visible then
 		if not alwaysupdate then
@@ -76,34 +79,35 @@ function newobject:update(dt)
 	
 	-- move to parent if there is a parent
 	if parent ~= base then
-		self.x = self.parent.x + self.staticx
-		self.y = self.parent.y + self.staticy
+		self.x = self.parent.x + self.staticx - (parent.offsetx or 0)
+		self.y = self.parent.y + self.staticy - (parent.offsety or 0)
 	end
 	
 	for k, v in ipairs(internals) do
 		v:update(dt)
-		for _, p in pairs(self:GetParents()) do
+		--[[for _, p in pairs(self:GetParents()) do
 			v.x = v.x - (p.offsetx or 0)
 			v.y = v.y - (p.offsety or 0)
-		end
+		end]]
 	end
 	
 	local x = self.x
 	local y = self.y
-	local width = self.width
-	local height = self.height
 	local offsetx = self.offsetx
 	local offsety = self.offsety
+	local width = self.width
+	local height = self.height
 	
 	for k, v in ipairs(children) do
 		v:update(dt)
 		v:SetClickBounds(x, y, width, height)
-		v.x = (v.parent.x + v.staticx) - offsetx
-		v.y = (v.parent.y + v.staticy) - offsety
-		for _, p in pairs(self:GetParents()) do
+		--v.x = (v.parent.x + v.staticx) - offsetx
+		--v.y = (v.parent.y + v.staticy) - offsety
+		
+		--[[for _, p in pairs(self:GetParents()) do
 			v.x = v.x - (p.offsetx or 0)
 			v.y = v.y - (p.offsety or 0)
-		end
+		end]]
 		if display == "vertical" then
 			if v.lastheight ~= v.height then
 				self:CalculateSize()
@@ -135,9 +139,6 @@ function newobject:draw()
 	local y = self.y
 	local width = self.width
 	local height = self.height
-	local stencilfunc = function()
-		love.graphics.rectangle("fill", x, y, width, height)
-	end
 	
 	self:SetDrawOrder()
 	
@@ -145,10 +146,10 @@ function newobject:draw()
 	if drawfunc then
 		drawfunc(self)
 	end
-		
-	love.graphics.stencil(stencilfunc)
-	love.graphics.setStencilTest("greater", 0)
-		
+	local scx, scy, scw, sch = love.graphics.getScissor()
+
+	love.graphics.intersectScissor(x, y, width, height)
+
 	local children = self.children
 	if children then
 		for k, v in ipairs(children) do
@@ -158,8 +159,8 @@ function newobject:draw()
 			end
 		end
 	end
-	
-	love.graphics.setStencilTest()
+
+	love.graphics.setScissor(scx, scy, scw, sch)
 	
 	local drawfunc = self.DrawOver or self.drawoverfunc
 	if drawfunc then
@@ -348,15 +349,16 @@ function newobject:CalculateSize()
 		if itemheight > height then
 			self.extraheight = itemheight - height
 			if not vbar then
-				local scrollbar = loveframes.objects["scrollbody"]:new(self, display)
-				table.insert(internals, scrollbar)
+				table.insert(internals, self.scrolly)
 				self.vbar = true
-				self:GetScrollBar().autoscroll = self.autoscroll
+				local bar = self:GetScrollBar()
+				bar.autoscroll = self.autoscroll
+				bar:ScrollTo(0)
+				self.scrolly:update(0)
 			end
 		else
 			if vbar then
-				local bar = internals[1]
-				bar:Remove()
+				self.scrolly:Remove()
 				self.vbar = false
 				self.offsety = 0
 			end
@@ -416,13 +418,13 @@ function newobject:RedoLayout()
 	end
 	
 	if #children > 0 then
+		local scrollbar = self:GetScrollBar()
 		if display == "vertical" then
 			if horizontalstacking then
 				local curwidth = padding
 				local curheight = padding
 				local maxwidth = self.width - padding * 2
 				local prevheight = 0
-				local scrollbar = self:GetScrollBar()
 				if scrollbar then
 					maxwidth = maxwidth - scrollbar.width
 				end
@@ -451,7 +453,7 @@ function newobject:RedoLayout()
 					v.staticx = padding
 					v.staticy = starty
 					v.lastheight = itemheight
-					if vbar then
+					if vbar and scrollbar.visible then
 						if itemwidth + padding > (width - scrollbodywidth) then
 							v:SetWidth((width - scrollbodywidth) - (padding * 2))
 						end
@@ -476,7 +478,7 @@ function newobject:RedoLayout()
 				local retainsize = v.retainsize
 				v.staticx = startx
 				v.staticy = padding
-				if hbar then
+				if hbar and scrollbar.visible then
 					if itemheight + padding > (height - scrollbodyheight) then
 						v:SetHeight((height - scrollbodyheight) - (padding * 2))
 					end
@@ -743,7 +745,7 @@ end
 	- func: GetMouseWheelScrollAmount()
 	- desc: gets the scroll amount of the mouse wheel
 --]]---------------------------------------------------------
-function newobject:GetButtonScrollAmount()
+function newobject:GetMouseWheelScrollAmount()
 
 	return self.mousewheelscrollamount
 	

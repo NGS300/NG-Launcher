@@ -77,8 +77,8 @@ function newobject:update(dt)
 	
 	-- move to parent if there is a parent
 	if parent ~= base then
-		self.x = self.parent.x + self.staticx
-		self.y = self.parent.y + self.staticy
+		self.x = self.parent.x + self.staticx - (parent.offsetx or 0)
+		self.y = self.parent.y + self.staticy - (parent.offsety or 0)
 	end
 	
 	if update then
@@ -187,6 +187,27 @@ end
 function newobject:GetText()
 
 	return self.text
+	
+end
+
+--[[---------------------------------------------------------
+	- func: SetFont(font)
+	- desc: sets the object's font, nil uses the skin's default
+--]]---------------------------------------------------------
+function newobject:SetFont(font)
+
+	self.font = font
+	return self
+	
+end
+
+--[[---------------------------------------------------------
+	- func: GetFont()
+	- desc: gets the object's font
+--]]---------------------------------------------------------
+function newobject:GetFont()
+
+	return self.font
 	
 end
 

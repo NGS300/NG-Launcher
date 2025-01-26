@@ -57,7 +57,6 @@ function newobject:update(dt)
 	self:CheckHover()
 	
 	local hover = self.hover
-	local down = self.down
 	local downobject = loveframes.downobject
 	local parent = self.parent
 	local base = loveframes.base
@@ -76,8 +75,8 @@ function newobject:update(dt)
 	
 	-- move to parent if there is a parent
 	if parent ~= base then
-		self.x = self.parent.x + self.staticx
-		self.y = self.parent.y + self.staticy
+		self.x = self.parent.x + self.staticx - (parent.offsetx or 0)
+		self.y = self.parent.y + self.staticy - (parent.offsety or 0)
 	end
 	
 	if update then
@@ -107,15 +106,18 @@ function newobject:mousepressed(x, y, button)
 	
 	local hover = self.hover
 	
-	if hover and button == 1 then
+	if hover then
 		local baseparent = self:GetBaseParent()
 		if baseparent and baseparent.type == "frame" then
 			baseparent:MakeTop()
 		end
-		self.down = true
-		loveframes.downobject = self
+		if button == 1 then
+			self.down = true
+			loveframes.downobject = self
+		end
 	end
 	
+	self.pressed_button = button
 end
 
 --[[---------------------------------------------------------
@@ -143,7 +145,7 @@ function newobject:mousereleased(x, y, button)
 	local enabled = self.enabled
 	local onclick = self.OnClick
 	
-	if hover and down and clickable and button == 1 then
+	if hover and down and clickable and self.pressed_button == button then
 		if enabled then
 			if self.groupIndex ~= 0 then
 				local baseparent = self.parent
@@ -159,7 +161,7 @@ function newobject:mousereleased(x, y, button)
 				self.checked = true
 			end
 			if onclick then
-				onclick(self, x, y)
+				onclick(self, x, y, self.pressed_button)
 			end
 			if self.toggleable then
 				local ontoggle = self.OnToggle
@@ -170,7 +172,7 @@ function newobject:mousereleased(x, y, button)
 			end
 		end
 	end
-	
+
 	self.down = false
 
 end
@@ -193,6 +195,27 @@ end
 function newobject:GetText()
 
 	return self.text
+	
+end
+
+--[[---------------------------------------------------------
+	- func: SetFont(font)
+	- desc: sets the object's font, nil uses the skin's default
+--]]---------------------------------------------------------
+function newobject:SetFont(font)
+
+	self.font = font
+	return self
+	
+end
+
+--[[---------------------------------------------------------
+	- func: GetFont()
+	- desc: gets the object's font
+--]]---------------------------------------------------------
+function newobject:GetFont()
+
+	return self.font
 	
 end
 

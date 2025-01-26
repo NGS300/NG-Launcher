@@ -313,7 +313,7 @@ function skin.button(object)
 	local height = object:GetHeight()
 	local hover = object:GetHover()
 	local text = object:GetText()
-	local font = skin.controls.button_text_font
+	local font = object:GetFont() or skin.controls.button_text_font
 	local twidth = font:getWidth(object.text)
 	local theight = font:getHeight(object.text)
 	local down = object:GetDown()
@@ -558,7 +558,7 @@ function skin.imagebutton(object)
 	local image = object:GetImage()
 	local imagecolor = object.imagecolor or {1, 1, 1, 1}
 	local down = object.down
-	local font = skin.controls.imagebutton_text_font
+	local font = object:GetFont() or skin.controls.imagebutton_text_font
 	local twidth = font:getWidth(object.text)
 	local theight = font:getHeight(object.text)
 	local textdowncolor = skin.controls.imagebutton_text_down_color

@@ -24,7 +24,6 @@ loveframes.require(path .. ".libraries.skins")
 loveframes.class = require(path .. ".third-party.middleclass")
 loveframes.utf8 = require(path .. ".third-party.utf8")
 
-
 -- library info
 loveframes.author = "Kenny Shields"
 loveframes.version = "11.3"
@@ -245,11 +244,8 @@ function loveframes.mousereleased(x, y, button)
 	base:mousereleased(x, y, button)
 	
 	-- reset the hover object
-	if button == 1 then
-		loveframes.downobject = false
-		loveframes.selectedobject = false
-	end
-	
+	loveframes.downobject = false
+	loveframes.selectedobject = false
 end
 
 --[[---------------------------------------------------------

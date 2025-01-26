@@ -729,6 +729,15 @@ function newobject:MakeTop()
 		if baseparent.type == "frame" then
 			baseparent:MakeTop()
 		end
+		basechildren = baseparent:GetChildren()
+		for k, v in ipairs(basechildren) do
+			if v == self then
+				table.remove(basechildren, k)
+				table.insert(basechildren, self)
+				key = k
+				break
+			end
+		end
 		return self
 	end
 	

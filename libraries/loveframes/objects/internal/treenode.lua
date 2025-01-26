@@ -145,10 +145,12 @@ function newobject:mousepressed(x, y, button)
 	
 	if self.hover and button == 1 then
 		local time = os.time()
-		if self.lastclick + 0.40 > time then
+		if self.lastclick + 0.30 > time then
 			self.open = not self.open
+			self.lastclick = 0
+		else
+			self.lastclick = time
 		end
-		self.lastclick = time
 		local onselectnode = self.tree.OnSelectNode
 		self.tree.selectednode = self
 		if onselectnode then
@@ -179,6 +181,16 @@ function newobject:mousereleased(x, y, button)
 	
 	for k, v in ipairs(self.internals) do
 		v:mousereleased(x, y, button)
+	end
+
+	if self.hover then
+		if button == 2 then
+			local onselectnoderightclick = self.tree.OnSelectNodeRightClick
+			self.tree.selectednode = self
+			if onselectnoderightclick then
+				onselectnoderightclick(self.parent, self)
+			end
+		end
 	end
 
 end
@@ -268,6 +280,13 @@ function newobject:RemoveNode(id)
 			break
 		end
 	end
+	
+end
+
+function newobject:SetSelected()
+
+	self.tree.selectednode = self
+	return self
 	
 end
 

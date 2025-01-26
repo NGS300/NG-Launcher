@@ -66,8 +66,8 @@ function newobject:update(dt)
 	
 	-- move to parent if there is a parent
 	if parent ~= base then
-		self.x = self.parent.x + self.staticx
-		self.y = self.parent.y + self.staticy
+		self.x = self.parent.x + self.staticx - (parent.offsetx or 0)
+		self.y = self.parent.y + self.staticy - (parent.offsety or 0)
 	end
 	
 	self.itemwidth = 0
@@ -174,6 +174,8 @@ function newobject:draw()
 		stencilfunc = function() love.graphics.rectangle("fill", self.x, self.y, self.width, self.height - 16) end
 	elseif self.vbar and self.hbar then
 		stencilfunc = function() love.graphics.rectangle("fill", self.x, self.y, self.width - 16, self.height - 16) end
+	else
+		stencilfunc = function() love.graphics.rectangle("fill", self.x, self.y, self.width, self.height) end
 	end
 	
 	self:SetDrawOrder()

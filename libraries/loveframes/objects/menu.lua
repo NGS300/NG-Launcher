@@ -60,8 +60,8 @@ function newobject:update(dt)
 	
 	-- move to parent if there is a parent
 	if parent ~= base then
-		self.x = self.parent.x + self.staticx
-		self.y = self.parent.y + self.staticy
+		self.x = self.parent.x + self.staticx - (parent.offsetx or 0)
+		self.y = self.parent.y + self.staticy - (parent.offsety or 0)
 	end
 	
 	for k, v in ipairs(self.internals) do
@@ -120,7 +120,6 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-
 	local state = loveframes.state
 	local selfstate = self.state
 	
@@ -133,7 +132,11 @@ function newobject:mousepressed(x, y, button)
 	if not visible then
 		return
 	end
-	
+
+	local internals = self.internals
+	for k, v in ipairs(internals) do
+		v:mousepressed(x, y, button)
+	end
 end
 
 --[[---------------------------------------------------------

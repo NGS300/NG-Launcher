@@ -28,6 +28,7 @@ function newobject:initialize()
 	self.internal = false
 	self.canmodify = false
 	self.lastbuttonclicked = false
+	self.pad = false
 	self.internals = {}
 	self.OnValueChanged = nil
 	
@@ -59,6 +60,9 @@ function newobject:initialize()
 				self.OnValueChanged(self, self.value)
 			end
 		end
+	end
+	input.OnFocusLost = function(object)
+		self:updateinput()
 	end
 	input.Update = function(object)
 		object:SetSize(object.parent.width - 20, object.parent.height)
@@ -139,6 +143,29 @@ function newobject:initialize()
 	table.insert(self.internals, decreasesbutton)
 	
 	self:SetDrawFunc()
+end
+
+function newobject:updateinput()
+
+	local value = self.value
+	if self.pad then
+		local maxabs = math.max(math.abs(self.min), math.abs(self.max))
+		-- A range from 0 to 0 would be unusual, but it would break the math.
+		if maxabs == 0 then maxabs = 1 end
+		local integralwidth = math.floor(math.log10(maxabs)) + 1
+		local width = integralwidth
+		if self.decimals > 0 then
+			width = width + self.decimals + 1
+		end
+		if value < 0 then
+			width = width + 1
+		end
+		local formatstring = string.format("%%0%d.%df", width, self.decimals)
+		value = string.format(formatstring, value)
+	end
+	local input = self.internals[1]
+	input:SetText(value)
+
 end
 
 --[[---------------------------------------------------------
@@ -231,11 +258,10 @@ function newobject:SetValue(value)
 	local curvalue = self.value
 	local value = tonumber(value) or min
 	local internals = self.internals
-	local input = internals[1]
 	local onvaluechanged = self.OnValueChanged
 	
 	self.value = value
-	input:SetText(value)
+	self:updateinput()
 	
 	if value ~= curvalue and onvaluechanged then
 		onvaluechanged(self, value)
@@ -303,19 +329,17 @@ end
 --]]---------------------------------------------------------
 function newobject:SetMax(max)
 
-	local internals = self.internals
-	local input = internals[1]
 	local onvaluechanged = self.OnValueChanged
 	
 	self.max = max
 	
 	if self.value > max then
 		self.value = max
-		input:SetValue(max)
 		if onvaluechanged then
 			onvaluechanged(self, max)
 		end
 	end
+	self:updateinput()
 	
 	return self
 	
@@ -337,19 +361,17 @@ end
 --]]---------------------------------------------------------
 function newobject:SetMin(min)
 
-	local internals = self.internals
-	local input = internals[1]
 	local onvaluechanged = self.OnValueChanged
 	
 	self.min = min
 	
 	if self.value < min then
 		self.value = min
-		input:SetValue(min)
 		if onvaluechanged then
 			onvaluechanged(self, min)
 		end
 	end
+	self:updateinput()
 	
 	return self
 	
@@ -371,8 +393,6 @@ end
 --]]---------------------------------------------------------
 function newobject:SetMinMax(min, max)
 
-	local internals = self.internals
-	local input = internals[1]
 	local onvaluechanged = self.OnValueChanged
 	
 	self.min = min
@@ -380,7 +400,7 @@ function newobject:SetMinMax(min, max)
 	
 	if self.value > max then
 		self.value = max
-		input:SetValue(max)
+		self:updateinput()
 		if onvaluechanged then
 			onvaluechanged(self, max)
 		end
@@ -388,7 +408,7 @@ function newobject:SetMinMax(min, max)
 	
 	if self.value < min then
 		self.value = min
-		input:SetValue(min)
+		self:updateinput()
 		if onvaluechanged then
 			onvaluechanged(self, min)
 		end
@@ -415,8 +435,6 @@ end
 function newobject:ModifyValue(type)
 
 	local value = self.value
-	local internals = self.internals
-	local input = internals[1]
 	local decimals = self.decimals
 	local onvaluechanged = self.OnValueChanged
 	
@@ -432,7 +450,7 @@ function newobject:ModifyValue(type)
 			self.value = max
 		end
 		self.value = loveframes.Round(self.value, decimals)
-		input:SetText(self.value)
+		self:updateinput()
 		if value ~= self.value then
 			if onvaluechanged then
 				onvaluechanged(self, self.value)
@@ -446,7 +464,7 @@ function newobject:ModifyValue(type)
 			self.value = min
 		end
 		self.value = loveframes.Round(self.value, decimals)
-		input:SetText(self.value)
+		self:updateinput()
 		if value ~= self.value then
 			if onvaluechanged then
 				onvaluechanged(self, self.value)
@@ -466,6 +484,7 @@ end
 function newobject:SetDecimals(decimals)
 
 	self.decimals = decimals
+	self:updateinput()
 	return self
 	
 end
@@ -479,6 +498,30 @@ function newobject:GetDecimals()
 
 	return self.decimals
 	
+end
+
+--[[---------------------------------------------------------
+	- func: SetPad(decimals)
+	- desc: sets whether to pad the object's value
+			with zeroes
+--]]---------------------------------------------------------
+function newobject:SetPad(pad)
+
+	self.pad = pad
+	self:updateinput()
+	return self
+
+end
+
+--[[---------------------------------------------------------
+	- func: GetPad()
+	- desc: gets whether to pad the object's value
+			with zeroes
+--]]---------------------------------------------------------
+function newobject:GetPad()
+
+	return self.pad
+
 end
 
 ---------- module end ----------

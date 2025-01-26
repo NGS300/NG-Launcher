@@ -53,9 +53,10 @@ function newobject:update(dt)
 		end
 	end
 	
-	self:CheckHover()
 	
 	local hover = self.hover
+	self:CheckHover()
+	
 	local parent = self.parent
 	local option_type = self.option_type
 	local activated = self.activated
@@ -96,8 +97,8 @@ function newobject:update(dt)
 	
 	-- move to parent if there is a parent
 	if parent ~= base then
-		self.x = self.parent.x + self.staticx
-		self.y = self.parent.y + self.staticy
+		self.x = self.parent.x + self.staticx - (parent.offsetx or 0)
+		self.y = self.parent.y + self.staticy - (parent.offsety or 0)
 	end
 	
 	if update then
@@ -111,7 +112,7 @@ end
 	- desc: called when the player presses a mouse button
 --]]---------------------------------------------------------
 function newobject:mousepressed(x, y, button)
-
+	
 	local state = loveframes.state
 	local selfstate = self.state
 	
@@ -125,6 +126,7 @@ function newobject:mousepressed(x, y, button)
 		return
 	end
 	
+	self.down = true
 end
 
 --[[---------------------------------------------------------
@@ -148,7 +150,7 @@ function newobject:mousereleased(x, y, button)
 	
 	local hover = self.hover
 	local option_type = self.option_type
-	if hover and option_type ~= "divider" and button == 1 then
+	if hover and option_type ~= "divider" and button == 1 and self.down then
 		local func = self.func
 		if func then
 			local text = self.text
@@ -156,8 +158,9 @@ function newobject:mousereleased(x, y, button)
 		end
 		local basemenu = self.parent:GetBaseMenu()
 		basemenu:SetVisible(false)
+		self.hover = false
 	end
-
+	self.down = false
 end
 
 --[[---------------------------------------------------------

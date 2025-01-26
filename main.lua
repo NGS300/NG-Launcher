@@ -1,13 +1,14 @@
+require("src.Components.AddonLoad")()
+
+
 loveframes = require 'libraries.loveframes'
 lovedownloader = require 'libraries.lovedownloader'
 nativefs = require 'libraries.nativefs'
 resolution = require 'libraries.resolution'
 neuron = require 'libraries.neuron'
+inspect = require 'libraries.inspect'
 
 viewmanager = require 'src.Components.ViewManager'
-
-require("src.Components.AddonLoad")()
-
 local function loadView(path)
     loveframes.RemoveAll()
     --local f = require(path:gsub(".lua", ""))()

@@ -125,8 +125,9 @@ function newobject:initialize(parent, bartype)
 	-- apply template properties to the object
 	loveframes.ApplyTemplatesToObject(self)
 	self:SetDrawFunc()
-end
 
+	self:SetAlwaysUpdate(true)
+end
 --[[---------------------------------------------------------
 	- func: update(deltatime)
 	- desc: updates the object

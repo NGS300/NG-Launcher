@@ -15,8 +15,8 @@ local newobject = loveframes.NewObject("checkbox", "loveframes_object_checkbox",
 --]]---------------------------------------------------------
 function newobject:initialize()
 	self.type = "checkbox"
-	self.width = 0
-	self.height = 0
+	self.width = 16
+	self.height = 16
 	self.boxwidth = 16
 	self.boxheight = 16
 	self.font = loveframes.basicfont
